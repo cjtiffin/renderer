@@ -1,0 +1,2 @@
+./main
+open output.tga
