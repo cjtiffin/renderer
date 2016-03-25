@@ -33,14 +33,22 @@ int main(int argc, char** argv)
 	
 // #include "unittests/unittest_vector.h"
 
-#if 1
-	const float width_offset = 1.0, width_scale = 2.0,
-	            height_offset = 1.0, height_scale = 2.0;
-	Model model("african_head.obj");
-#else
+#if 0
 	const float width_offset = 1.0, width_scale = 2.0,
 	            height_offset = 0.2, height_scale = 2.3;
-	Model model("batman.obj");
+	Model model("Models/BAC_Batman70s_rocksteady/batman.obj");
+#elif 0
+	const float width_offset = 1.0, width_scale = 2.0,
+	            height_offset = 0.2, height_scale = 2.3;
+	Model model("Models/Harley/Harley.obj");
+#elif 0
+	const float width_offset = 1.0, width_scale = 2.0,
+	            height_offset = 0.2, height_scale = 2.3;
+	Model model("Models/cat/cat.obj");
+#else
+	const float width_offset = 1.0, width_scale = 2.0,
+	            height_offset = 1.0, height_scale = 2.0;
+	Model model("Models/african_head.obj");
 #endif
 
 	const unsigned width = 1000, height = 1000;
@@ -60,6 +68,7 @@ int main(int argc, char** argv)
 		std::vector<int> const &face = model.face(i);
 		for (int j = 0; j < 3; ++j)
 		{
+			assert(face.size() >= 3);
 			Vector3f const &vert = model.vert(face[j]);
 			screen_coords[j] = Vector3f(int((vert.x + width_offset) * width / width_scale),
 			                            int((vert.y + height_offset) * height / height_scale),

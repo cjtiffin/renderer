@@ -5,7 +5,7 @@
 #if DEBUG
 #define assert(condition) ((void)0)
 #else
-#define assert(condition) ((void)0)
+#include <cassert>
 #endif
 
 #endif //_CORE_ASSERT_H_

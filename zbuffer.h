@@ -2,6 +2,8 @@
 #define _ZBUFFER_H_
 #pragma once
 
+#include "core/assert.h"
+
 class ZBuffer
 {
 public:
@@ -30,8 +32,7 @@ public:
 
 	zbuf_type &get_pixel(size_t x, size_t y)
 	{
-		if (x > width || y > height)
-			throw;
+		assert(x < width && y < height);
 		return buffer[y * width + x];
 	}
 
