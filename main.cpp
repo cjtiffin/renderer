@@ -47,77 +47,79 @@ int main(int argc, char** argv)
 	TGAImage image(width, height, TGAImage::RGB);
 
 
-	// ZBuffer zbuf(width, height);
+	// 3D Drawing
+	ZBuffer zbuf(width, height);
+	Vector3f light(0, 0, -1);
 
-	// Vector3f light(0, 0, -1);
-
-	// // shaded render
-	// for (int i = 0; i < model.nfaces(); ++i)
-	// {
-	// 	Vector3f world_coords[3];
-	// 	Vector3f screen_coords[3];
-
-	// 	std::vector<int> const &face = model.face(i);
-	// 	for (int j = 0; j < 3; ++j)
-	// 	{
-	// 		Vector3f const &vert = model.vert(face[j]);
-	// 		screen_coords[j] = Vector3f(int((vert.x + width_offset) * width / width_scale),
-	// 		                            int((vert.y + height_offset) * height / height_scale),
-	// 		                            (vert.z + 1.0) / 2.0);
-	// 		world_coords[j] = vert;
-	// 	}
-
-	// 	float intensity = 0.0;
-	// 	// if (model.face_has_norm(i))
-	// 	// {
-	// 	// 	std::vector<int> const &face_norm = model.face_norm(i);
-	// 	// 	Vector3f norm = model.vert_norm(face_norm[0]) + model.vert_norm(face_norm[1]) + model.vert_norm(face_norm[2]);
-	// 	// 	intensity = light.dot(norm.normalize());
-	// 	// }
-	// 	// else
-	// 	{
-	// 		Vector3f norm = (world_coords[2]-world_coords[0]).cross(world_coords[1]-world_coords[0]);
-	// 		intensity = light.dot(norm.normalize());
-	// 	}
-
-	// 	// back face occlusion - test for dot product being positive
-	// 	if (intensity > 0)
-	// 	{
-	// 		triangle(screen_coords[0], screen_coords[1], screen_coords[2], zbuf, image, Colour(intensity * 255, intensity * 255, intensity * 255, 255));
-	// 		// line(screen_coords[0], screen_coords[1], image, white);
-	// 		// line(screen_coords[1], screen_coords[2], image, white);
-	// 		// line(screen_coords[2], screen_coords[0], image, white);
-	// 	}
-	// }
-
-
+	// shaded render
 	for (int i = 0; i < model.nfaces(); ++i)
 	{
-	    std::vector<int> face = model.face(i); 
-	    Vector2i screen_coords[3]; 
-		for (int j = 0; j < 3; ++j)
-	    { 
-	        Vector3f world_coords = model.vert(face[j]); 
-	        screen_coords[j] = Vector2i((world_coords.x + 1.0) * width / 2.0, (world_coords.y + 1.0) * height / 2.0); 
-	    } 
-	    triangle(screen_coords[0], screen_coords[1], screen_coords[2], image, Colour(rand() % 255, rand() % 255, rand() % 255, 255)); 
-	}
+		Vector3f world_coords[3];
+		Vector3f screen_coords[3];
 
-	// wireframe render
-	for (int i = 0; i < model.nfaces(); ++i)
-	{
 		std::vector<int> const &face = model.face(i);
 		for (int j = 0; j < 3; ++j)
 		{
-			Vector3f const &v0 = model.vert(face[j]);
-			Vector3f const &v1 = model.vert(face[(j + 1) % 3]);
-			int x0 = (v0.x + width_offset) * width / width_scale;
-			int y0 = (v0.y + height_offset) * height / height_scale;
-			int x1 = (v1.x + width_offset) * width / width_scale;
-			int y1 = (v1.y + height_offset) * height / height_scale;
-			line(x0, y0, x1, y1, image, white);
+			Vector3f const &vert = model.vert(face[j]);
+			screen_coords[j] = Vector3f(int((vert.x + width_offset) * width / width_scale),
+			                            int((vert.y + height_offset) * height / height_scale),
+			                            (vert.z + 1.0) / 2.0);
+			world_coords[j] = vert;
+		}
+
+		float intensity = 0.0;
+		#if 0 // use given normals?
+		{
+			std::vector<int> const &face_norm = model.face_norm(i);
+			Vector3f norm = model.vert_norm(face_norm[0]) + model.vert_norm(face_norm[1]) + model.vert_norm(face_norm[2]);
+			intensity = -light.dot(norm.normalize());
+		}
+		#else // calculate normals
+		{
+			Vector3f norm = (world_coords[2]-world_coords[0]).cross(world_coords[1]-world_coords[0]);
+			intensity = light.dot(norm.normalize());
+		}
+		#endif
+
+		// back face occlusion - test for dot product being positive
+		if (intensity > 0)
+		{
+			triangle(screen_coords[0], screen_coords[1], screen_coords[2], zbuf, image, Colour(intensity * 255, intensity * 255, intensity * 255, 255));
+			// line(screen_coords[0], screen_coords[1], image, white);
+			// line(screen_coords[1], screen_coords[2], image, white);
+			// line(screen_coords[2], screen_coords[0], image, white);
 		}
 	}
+
+
+	// // 2D Drawing
+	// for (int i = 0; i < model.nfaces(); ++i)
+	// {
+	// 	std::vector<int> face = model.face(i);
+	// 	Vector2i screen_coords[3];
+	// 	for (int j = 0; j < 3; ++j)
+	// 	{
+	// 		Vector3f world_coords = model.vert(face[j]);
+	// 		screen_coords[j] = Vector2i((world_coords.x + 1.0) * width / 2.0, (world_coords.y + 1.0) * height / 2.0);
+	// 	}
+	// 	triangle(screen_coords[0], screen_coords[1], screen_coords[2], image, Colour(rand() % 255, rand() % 255, rand() % 255, 255));
+	// }
+
+	// // wireframe render
+	// for (int i = 0; i < model.nfaces(); ++i)
+	// {
+	// 	std::vector<int> const &face = model.face(i);
+	// 	for (int j = 0; j < 3; ++j)
+	// 	{
+	// 		Vector3f const &v0 = model.vert(face[j]);
+	// 		Vector3f const &v1 = model.vert(face[(j + 1) % 3]);
+	// 		int x0 = (v0.x + width_offset) * width / width_scale;
+	// 		int y0 = (v0.y + height_offset) * height / height_scale;
+	// 		int x1 = (v1.x + width_offset) * width / width_scale;
+	// 		int y1 = (v1.y + height_offset) * height / height_scale;
+	// 		line(x0, y0, x1, y1, image, white);
+	// 	}
+	// }
 
 	image.flip_vertically();
 	image.write_tga_file("output.tga");
