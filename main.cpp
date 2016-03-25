@@ -8,6 +8,7 @@
 #include "vector.h"
 #include "draw.h"
 
+// https://github.com/ssloy/tinyrenderer/wiki/
 
 const Colour white = Colour(255, 255, 255, 255);
 const Colour red   = Colour(255, 0,   0,   255);

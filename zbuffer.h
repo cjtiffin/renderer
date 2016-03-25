@@ -2,7 +2,9 @@
 #define _ZBUFFER_H_
 #pragma once
 
-#include "core/assert.h"
+#include "core/core.h"
+#include <vector>
+
 
 class ZBuffer
 {
@@ -10,30 +12,23 @@ public:
 	typedef  double  zbuf_type;
 
 	ZBuffer(size_t w, size_t h)
-		: width(w), height(h), buffer(NULL)
+		: width(w), height(h)
 	{
 		size_t size = width * height;
-		buffer = new zbuf_type[size];
-		memset(buffer, 0, sizeof(zbuf_type) * size);
-	}
-	~ZBuffer()
-	{
-		delete buffer; buffer = NULL;
+		buffer.resize(size, 0);
 	}
 
-	bool test(int x, int y, zbuf_type z)
+	bool test(size_t x, size_t y, zbuf_type z)
 	{
+		if (x >= width || y >= height)
+			return false;
+
 		zbuf_type &px = get_pixel(x, y);
 		if (z <= px)
 			return false;
+
 		px = z;
 		return true;
-	}
-
-	zbuf_type &get_pixel(size_t x, size_t y)
-	{
-		assert(x < width && y < height);
-		return buffer[y * width + x];
 	}
 
 	void output(const char *filename)
@@ -49,8 +44,14 @@ public:
 	}
 
 private:
+	zbuf_type &get_pixel(size_t x, size_t y)
+	{
+		assert(x < width && y < height);
+		return buffer[y * width + x];
+	}
+
 	size_t width, height;
-	zbuf_type *buffer;
+	std::vector<zbuf_type> buffer;
 };
 
 #endif //_ZBUFFER_H_
