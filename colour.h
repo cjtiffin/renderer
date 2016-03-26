@@ -37,4 +37,12 @@ typedef  ColourBase<float>          ColourF;
 typedef  ColourBase<double>         ColourD;
 typedef  ColourBase<int>            ColourI;
 
+namespace Colours {
+const Colour white = Colour(255, 255, 255, 255);
+const Colour red   = Colour(255, 0,   0,   255);
+const Colour green = Colour(0,   255, 0,   255);
+const Colour blue  = Colour(0,   0,   255, 255);
+const Colour black = Colour(0,   0,   0,   255);
+}
+
 #endif //_COLOUR_H_

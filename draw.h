@@ -96,7 +96,7 @@ inline void scan_line(int x0, int x1, int y, float z0, float z1, ColourD c0, Col
 // naive triangle drawing algorithm
 void triangle(Vertex v0, Vertex v1, Vertex v2, ZBuffer &zbuf, TGAImage &image)
 {
-	// sort y ascending
+	// sort y ascending, then x ascending
 	if (v0.point.y > v1.point.y || (is_equal(v0.point.y, v1.point.y) && v0.point.x > v1.point.x)) std::swap(v0, v1);
 	if (v1.point.y > v2.point.y || (is_equal(v1.point.y, v2.point.y) && v1.point.x > v2.point.x)) std::swap(v1, v2);
 	if (v0.point.y > v1.point.y || (is_equal(v0.point.y, v1.point.y) && v0.point.x > v1.point.x)) std::swap(v0, v1);

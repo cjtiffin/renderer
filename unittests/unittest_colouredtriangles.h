@@ -15,6 +15,11 @@ auto ow = Vector3f(w, 0, 0);
 auto oh = Vector3f(0, h, 0);
 auto ob = ow + oh;
 
+#ifdef UT_WIREFRAME
+ZBuffer_AlwaysAllow __zba;
+#define triangle(a, b, c, zb, im) triangle(a, b, c, zb, im); line(a.point, b.point, __zba, im, Colours::white); line(a.point, c.point, __zba, im, Colours::white); line(b.point, c.point, __zba, im, Colours::white)
+#endif
+
 // anticlockwise anticlockwise - bottom left quarter
 triangle(Vertex(bl, red), Vertex(mm, green), Vertex(tl, blue), zbuf, image);
 triangle(Vertex(tl, red), Vertex(mm, green), Vertex(tr, blue), zbuf, image);
@@ -42,3 +47,7 @@ triangle(Vertex(bl+oh, red), Vertex(mm+oh, green), Vertex(tl+oh, blue), zbuf, im
 triangle(Vertex(tr+oh, red), Vertex(mm+oh, green), Vertex(tl+oh, blue), zbuf, image);
 triangle(Vertex(tr+oh, red), Vertex(mm+oh, green), Vertex(br+oh, blue), zbuf, image);
 triangle(Vertex(bl+oh, red), Vertex(mm+oh, green), Vertex(br+oh, blue), zbuf, image);
+
+#ifdef UT_WIREFRAME
+#undef triangle
+#endif

@@ -10,10 +10,6 @@
 
 // https://github.com/ssloy/tinyrenderer/wiki/
 
-const Colour white = Colour(255, 255, 255, 255);
-const Colour red   = Colour(255, 0,   0,   255);
-const Colour green = Colour(0,   255, 0,   255);
-const Colour blue  = Colour(0,   0,   255, 255);
 
 template <typename T>
 T lerp(T start, T end, double percent)
@@ -31,7 +27,7 @@ bool half_space_test(int x, int y, Vector2<T> v0, Vector2<T> v1)
 int main(int argc, char** argv)
 {
 	PROFILE_SCOPED_FN
-	
+
 // #include "unittests/unittest_vector.h"
 
 #if 0
@@ -42,9 +38,9 @@ int main(int argc, char** argv)
 	const float width_offset = 1.0, width_scale = 2.0,
 	            height_offset = 0.2, height_scale = 2.3;
 	Model model("Models/Harley/Harley.obj");
-#elif 0
-	const float width_offset = 1.0, width_scale = 2.0,
-	            height_offset = 0.2, height_scale = 2.3;
+#elif 1
+	const float width_offset = 0.5, width_scale = 1.0,
+	            height_offset = 0.05, height_scale = 1.0;
 	Model model("Models/cat/cat.obj");
 #elif 1
 	const float width_offset = 1.0, width_scale = 2.0,
@@ -56,6 +52,9 @@ int main(int argc, char** argv)
 	TGAImage image(width, height, TGAImage::RGB);
 	ZBuffer zbuf(width, height);
 	ZBuffer_AlwaysAllow zb_always;
+
+// #define UT_WIREFRAME
+// #include "unittests/unittest_colouredtriangles.h"
 
 	// 3D Drawing
 	Vector3f light(0, 0, -1);
@@ -96,9 +95,9 @@ int main(int argc, char** argv)
 		if (intensity > 0)
 		{
 			triangle(screen_coords[0], screen_coords[1], screen_coords[2], zbuf, image);
-			// line(screen_coords[0].point, screen_coords[1].point, zb_always, image, white);
-			// line(screen_coords[1].point, screen_coords[2].point, zb_always, image, white);
-			// line(screen_coords[2].point, screen_coords[0].point, zb_always, image, white);
+			// line(screen_coords[0].point, screen_coords[1].point, zb_always, image, Colours::white);
+			// line(screen_coords[1].point, screen_coords[2].point, zb_always, image, Colours::white);
+			// line(screen_coords[2].point, screen_coords[0].point, zb_always, image, Colours::white);
 		}
 	}
 
@@ -128,7 +127,7 @@ int main(int argc, char** argv)
 	// 		int y0 = (v0.y + height_offset) * height / height_scale;
 	// 		int x1 = (v1.x + width_offset) * width / width_scale;
 	// 		int y1 = (v1.y + height_offset) * height / height_scale;
-	// 		line(x0, y0, x1, y1, image, white);
+	// 		line(x0, y0, x1, y1, image, Colours::white);
 	// 	}
 	// }
 
