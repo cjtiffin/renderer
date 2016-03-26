@@ -30,7 +30,7 @@ template <class T, class U> struct arithmetic
 };
 
 // uses raw array to provide comparisons
-template <class T> struct comparable_for_vector
+template <class T> struct comparable_for_raw_arr
 	: comparable<T>
 {
 	friend bool operator == (const T& l, const T& r)
@@ -50,7 +50,7 @@ template <class T> struct comparable_for_vector
 };
 
 // uses the raw array to provide operators
-template <class T> struct arithmetic_for_vector
+template <class T> struct arithmetic_for_raw_arr
 	: arithmetic<T, T>
 {
 	friend T operator += (T &l, const T& r) { for (unsigned i=0; i<l.size; ++i) l.raw[i] += r.raw[i]; return l; }
@@ -60,7 +60,7 @@ template <class T> struct arithmetic_for_vector
 };
 
 // uses the raw array to provide operators
-template <class T, class U> struct arithmetic_for_vector2
+template <class T, class U> struct arithmetic_for_raw_arr2
 	: arithmetic<T, U>
 {
 	friend T operator += (T &l, const U& r) { for (unsigned i=0; i<l.size; ++i) l.raw[i] += r; return l; }
@@ -70,7 +70,7 @@ template <class T, class U> struct arithmetic_for_vector2
 };
 
 // uses the raw array to provide operators
-template <class T, class U> struct subscript_for_vector
+template <class T, class U> struct subscript_for_raw_arr
 {
 	U & operator [] (size_t i) { T &v = T_cast(); assert(i < v.size); return v.raw[i]; }
 	U & operator () (size_t i) { T &v = T_cast(); assert(i < v.size); return v.raw[i]; }
@@ -83,7 +83,7 @@ private:
 };
 
 // uses the raw array to provide operators
-template <class T> struct streams_for_vector
+template <class T> struct streams_for_raw_arr
 {
 	friend std::istream & operator >> (std::istream& is, T &v)
 	{
@@ -124,12 +124,22 @@ private:
 // provide a helper for all associated vector ops
 // requires only < and == to be defined
 template <class T, class U> struct all_vector_ops
-	: comparable_for_vector<T>
-	, arithmetic_for_vector<T>
-	, arithmetic_for_vector2<T, float>
-	, subscript_for_vector<T, U>
-	, streams_for_vector<T>
+	: comparable_for_raw_arr<T>
+	, arithmetic_for_raw_arr<T>
+	, arithmetic_for_raw_arr2<T, float>
+	, subscript_for_raw_arr<T, U>
+	, streams_for_raw_arr<T>
 	, public vector_ops<T>
+{};
+
+// provide a helper for all associated vector ops
+// requires only < and == to be defined
+template <class T, class U> struct all_colour_ops
+	: comparable_for_raw_arr<T>
+	, arithmetic_for_raw_arr<T>
+	, arithmetic_for_raw_arr2<T, float>
+	, subscript_for_raw_arr<T, U>
+	, streams_for_raw_arr<T>
 {};
 
 }

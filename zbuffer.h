@@ -18,7 +18,7 @@ public:
 		buffer.resize(size, 0);
 	}
 
-	bool test(size_t x, size_t y, zbuf_type z)
+	virtual bool test(size_t x, size_t y, zbuf_type z)
 	{
 		if (x >= width || y >= height)
 			return false;
@@ -53,5 +53,15 @@ private:
 	size_t width, height;
 	std::vector<zbuf_type> buffer;
 };
+
+
+class ZBuffer_AlwaysAllow
+	: public ZBuffer
+{
+public:
+	ZBuffer_AlwaysAllow() : ZBuffer(0, 0) {}
+	inline bool test(size_t, size_t, ZBuffer::zbuf_type) { return true; }
+};
+
 
 #endif //_ZBUFFER_H_

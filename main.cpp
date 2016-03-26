@@ -46,7 +46,7 @@ int main(int argc, char** argv)
 	const float width_offset = 1.0, width_scale = 2.0,
 	            height_offset = 0.2, height_scale = 2.3;
 	Model model("Models/cat/cat.obj");
-#else
+#elif 1
 	const float width_offset = 1.0, width_scale = 2.0,
 	            height_offset = 1.0, height_scale = 2.0;
 	Model model("Models/african_head.obj");
@@ -54,26 +54,27 @@ int main(int argc, char** argv)
 
 	const unsigned width = 1000, height = 1000;
 	TGAImage image(width, height, TGAImage::RGB);
-
+	ZBuffer zbuf(width, height);
+	ZBuffer_AlwaysAllow zb_always;
 
 	// 3D Drawing
-	ZBuffer zbuf(width, height);
 	Vector3f light(0, 0, -1);
 
 	// shaded render
 	for (int i = 0; i < model.nfaces(); ++i)
 	{
 		Vector3f world_coords[3];
-		Vector3f screen_coords[3];
+		Vertex screen_coords[3];
 
 		std::vector<int> const &face = model.face(i);
 		for (int j = 0; j < 3; ++j)
 		{
 			assert(face.size() >= 3);
 			Vector3f const &vert = model.vert(face[j]);
-			screen_coords[j] = Vector3f(int((vert.x + width_offset) * width / width_scale),
-			                            int((vert.y + height_offset) * height / height_scale),
-			                            (vert.z + 1.0) / 2.0);
+			screen_coords[j].point = Vector3f(int((vert.x + width_offset) * width / width_scale),
+			                                  int((vert.y + height_offset) * height / height_scale),
+			                                      (vert.z + 1.0) / 2.0);
+			screen_coords[j].colour = Colour(rand()%255, rand()%255, rand()%255, 255);
 			world_coords[j] = vert;
 		}
 
@@ -94,10 +95,10 @@ int main(int argc, char** argv)
 		// back face occlusion - test for dot product being positive
 		if (intensity > 0)
 		{
-			triangle(screen_coords[0], screen_coords[1], screen_coords[2], zbuf, image, Colour(intensity * 255, intensity * 255, intensity * 255, 255));
-			// line(screen_coords[0], screen_coords[1], image, white);
-			// line(screen_coords[1], screen_coords[2], image, white);
-			// line(screen_coords[2], screen_coords[0], image, white);
+			triangle(screen_coords[0], screen_coords[1], screen_coords[2], zbuf, image);
+			// line(screen_coords[0].point, screen_coords[1].point, zb_always, image, white);
+			// line(screen_coords[1].point, screen_coords[2].point, zb_always, image, white);
+			// line(screen_coords[2].point, screen_coords[0].point, zb_always, image, white);
 		}
 	}
 

@@ -3,34 +3,38 @@
 #pragma once
 
 #include <algorithm>
+#include "operators.h"
 
-struct Colour
+template <class T> struct ColourBase
+	: operators::all_colour_ops<ColourBase<T>, T>
 {
-	Colour() : val(0) {}
-	Colour(unsigned char g) : grey(g) {}
-	Colour(unsigned char R, unsigned char G, unsigned char B) : b(B), g(G), r(R), a(0xFF) {}
-	Colour(unsigned char R, unsigned char G, unsigned char B, unsigned char A) : b(B), g(G), r(R), a(A) {}
-	Colour(unsigned int v) : val(v) {}
-	Colour(const Colour &c) : val(c.val) {}
-	Colour(const unsigned char *p, int bpp) : val(0)
+	ColourBase() : b(0), g(0), r(0), a(0) {}
+	ColourBase(T g) : grey(g) {}
+	ColourBase(T R, T G, T B) : b(B), g(G), r(R), a(0xFF) {}
+	ColourBase(T R, T G, T B, T A) : b(B), g(G), r(R), a(A) {}
+	ColourBase(const ColourBase<T> &c) : b(c.b), g(c.g), r(c.r), a(c.a) {}
+	ColourBase(const T *p, size_t bpp) : b(0), g(0), r(0), a(0)
 	{
-		memcpy(&raw, p, sizeof(unsigned char) * std::min(4, bpp));
+		memcpy(&raw, p, sizeof(T) * std::min(4ul, bpp));
 	}
 
-	Colour & operator =(const Colour &c)
-	{
-		if (this != &c)
-			val = c.val;
-		return *this;
-	}
+	template <typename T2>
+	ColourBase(const ColourBase<T2>& c) : b(c.b), g(c.g), r(c.r), a(c.a) {}
+
+	static const size_t size = 4;
 
 	union
 	{
-		struct { unsigned char b, g, r, a; };
-		unsigned char grey;
-		unsigned char raw[4];
-		unsigned int val;
+		struct { T b, g, r, a; };
+		T grey;
+		T raw[size];
 	};
 };
+
+typedef  ColourBase<unsigned char>  Colour;
+typedef  ColourBase<unsigned char>  ColourUC;
+typedef  ColourBase<float>          ColourF;
+typedef  ColourBase<double>         ColourD;
+typedef  ColourBase<int>            ColourI;
 
 #endif //_COLOUR_H_

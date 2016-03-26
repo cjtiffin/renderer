@@ -18,7 +18,7 @@
 #endif
 
 #define UNIT_TEST(x) UNIT_TEST_T(x)
-#define PRINT(x) std::cout << x << std::endl;
+#define PRINT(x) std::cout << #x << " = " << x << std::endl;
 
 #include <iostream>
 #include "assert.h"

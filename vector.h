@@ -18,6 +18,9 @@ public:
 	Vector2(T a, T b) : x(a), y(b) {}
 	Vector2(VType const &v) : x(v.x), y(v.y) {}
 
+	template <class T2>
+	Vector2(const Vector2<T2>& v) : x(v.x), y(v.y) {}
+
 	Angle angle() const { return atan2(y, x); }
 	VType rotate(Angle a) const { VType v(*this); return v.rotate(a); }
 	VType & rotate(Angle a) { float c = a.cos(), s = a.sin(); T t = x; x = x*c - y*s; y = t*s + y*c; return *this; }
@@ -47,6 +50,9 @@ public:
 	Vector3(T a, T b, T c) : x(a), y(b), z(c) {}
 	Vector3(VType const &v) : x(v.x), y(v.y), z(v.z) {}
 
+	template <class T2>
+	Vector3(const Vector3<T2>& v) : x(v.x), y(v.y), z(v.z) {}
+
 	VType cross(const VType& v) const { return VType(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x); }
 
 	// also provided are:
@@ -72,6 +78,9 @@ public:
 	Vector4() : x(0), y(0), z(0), w(0) {}
 	Vector4(T a, T b, T c, T d) : x(a), y(b), z(c), w(d) {}
 	Vector4(VType const &v) : x(v.x), y(v.y), z(v.z), w(v.w) {}
+
+	template <class T2>
+	Vector4(const Vector4<T2>& v) : x(v.x), y(v.y), z(v.z), w(v.w) {}
 
 	// also provided are:
 	//  comparison operators <, >, <=, >= == !=
