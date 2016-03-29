@@ -44,7 +44,7 @@ Model::Model(const char *filename)
 		     if (!line.compare(0, 2, "v "))
 			READ(3, verts)
 		else if (!line.compare(0, 3, "vt "))
-			READ(2, verts_tex)
+			READ(2, verts_uv)
 		else if (!line.compare(0, 3, "vn "))
 			READ(3, verts_norm)
 		else if (!line.compare(0, 2, "f "))
@@ -58,17 +58,17 @@ Model::Model(const char *filename)
 			while (iss && remaining(iss) > 1)
 			{
 				v  |= optional_push_back(iss, f, verts.size()); iss >> ignore;
-				vt |= optional_push_back(iss, ft, verts_tex.size()); iss >> ignore;
+				vt |= optional_push_back(iss, ft, verts_uv.size()); iss >> ignore;
 				vn |= optional_push_back(iss, fn, verts_norm.size());
 			}
 
 			if (v)  faces.push_back(f);
-			if (vt) faces_tex.push_back(ft);
+			if (vt) faces_uv.push_back(ft);
 			if (vn) faces_norm.push_back(fn);
 		}
 	}
 
 	std::cout << "model: " << filename << std::endl
-	          << " v# " << verts.size() << " vt# " << verts_tex.size() << " vn# " << verts_norm.size() << std::endl
-	          << " f# "  << faces.size() << " ft# "  << faces_tex.size() << " fn# "  << faces_norm.size() << std::endl;
+	          << " v# " << verts.size() << " vt# " << verts_uv.size() << " vn# " << verts_norm.size() << std::endl
+	          << " f# "  << faces.size() << " ft# "  << faces_uv.size() << " fn# "  << faces_norm.size() << std::endl;
 }
