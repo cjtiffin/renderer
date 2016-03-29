@@ -23,6 +23,10 @@ TGAImage::TGAImage(const TGAImage &img) {
 	memcpy(data, img.data, nbytes);
 }
 
+TGAImage::TGAImage(const char *filename) : data(NULL), width(0), height(0), bytespp(0) {
+	read_tga_file(filename);
+}
+
 TGAImage::~TGAImage() {
 	if (data) delete [] data;
 }
@@ -253,6 +257,10 @@ Colour TGAImage::get(int x, int y) {
 		return Colour();
 	}
 	return Colour(data+(x+y*width)*bytespp, bytespp);
+}
+
+Colour TGAImage::get_from_uv(double u, double v) {
+	return get(u * width, (1-v) * height);
 }
 
 bool TGAImage::set(int x, int y, Colour c) {

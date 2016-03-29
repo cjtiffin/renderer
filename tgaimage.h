@@ -40,6 +40,7 @@ public:
 	TGAImage();
 	TGAImage(int w, int h, int bpp);
 	TGAImage(const TGAImage &img);
+	TGAImage(const char *filename);
 	~TGAImage();
 
 	TGAImage & operator =(const TGAImage &img);
@@ -50,6 +51,7 @@ public:
 	bool flip_vertically();
 	bool scale(int w, int h);
 	Colour get(int x, int y);
+	Colour get_from_uv(double u, double v);
 	bool set(int x, int y, Colour c);
 	int get_width();
 	int get_height();
