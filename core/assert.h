@@ -9,7 +9,7 @@
 #include <iostream>
 #include <execinfo.h>
 
-#define assert(condition) { static bool __ignore = false; if(!__ignore && !(condition)) __ignore = __assert_fn(#condition, __FILE__, __LINE__, __FUNCTION__); }
+#define assert(condition, ...) { static bool __ignore = false; if(!__ignore && !(condition)) __ignore = __assert_fn(#condition, __FILE__, __LINE__, __FUNCTION__, #__VA_ARGS__); }
 
 inline void __print_stack()
 {
@@ -22,11 +22,14 @@ inline void __print_stack()
 	free(strs);
 }
 
-inline bool __assert_fn(const char *condition, const char *file, int line, const char *function)
+inline bool __assert_fn(const char *condition, const char *file, int line, const char *function, const char *message = NULL)
 {
 	// open a dialog and ask end user whether to terminate, continue, ignore
-	std::cerr << file << "(" << line << "): Assertion failed: (" << condition << "), function " << function << std::endl;
-	__print_stack(); abort();
+	std::cerr << FILE_LINE_OUTPUT_STREAM(file, line) << " Assertion failed: (" << condition << "). Function: " << function << std::endl;
+	if (message && message[0] != 0)
+		std::cerr << message << std::endl;
+	__print_stack();
+	abort();
 	return false;
 }
 
