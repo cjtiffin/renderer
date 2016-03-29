@@ -85,20 +85,20 @@ private:
 // uses the raw array to provide operators
 template <class T> struct streams_for_raw_arr
 {
-	friend std::istream & operator >> (std::istream& is, T &v)
-	{
-		char t;
-		for (unsigned i=0; i<v.size-1; ++i)
-			is >> v.raw[i] >> t;
-		is >> v.raw[v.size-1];
-		return is;
-	}
+	// friend std::istream & operator >> (std::istream& is, T &v)
+	// {
+	// 	char t;
+	// 	for (unsigned i=0; i<v.size-1; ++i)
+	// 		is >> v.raw[i] >> t;
+	// 	is >> v.raw[v.size-1];
+	// 	return is;
+	// }
 
 	friend std::ostream & operator << (std::ostream& os, T const &v)
 	{
 		for (unsigned i=0; i<v.size-1; ++i)
-			os << v.raw[i] << ',';
-		os << v.raw[v.size-1];
+			os << double(v.raw[i]) << ',';
+		os << double(v.raw[v.size-1]);
 		return os;
 	}
 };

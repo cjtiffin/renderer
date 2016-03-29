@@ -10,6 +10,7 @@
 
 // https://github.com/ssloy/tinyrenderer/wiki/
 
+using namespace Colours;
 
 template <typename T>
 T lerp(T start, T end, double percent)
@@ -23,41 +24,55 @@ bool half_space_test(int x, int y, Vector2<T> v0, Vector2<T> v1)
 	return (v0.x - v1.x) * (y - v0.y) - (v0.y - v1.y) * (x - v0.x) > 0;
 }
 
+float randfp()
+{
+	return float(rand()) / RAND_MAX;
+}
 
 int main(int argc, char** argv)
 {
-	PROFILE_SCOPED_FN
+	// PROFILE_SCOPED_FN
 
-// #include "unittests/unittest_vector.h"
+	TGAImage *texture = NULL;
 
 #if 0
 	const float width_offset = 1.0, width_scale = 2.0,
 	            height_offset = 0.2, height_scale = 2.3;
 	Model model("Models/BAC_Batman70s_rocksteady/batman.obj");
 #elif 0
+	// this doesn't work as quads aren't supported
 	const float width_offset = 1.0, width_scale = 2.0,
 	            height_offset = 0.2, height_scale = 2.3;
 	Model model("Models/Harley/Harley.obj");
-#elif 1
+#elif 0
 	const float width_offset = 0.5, width_scale = 1.0,
 	            height_offset = 0.05, height_scale = 1.0;
 	Model model("Models/cat/cat.obj");
 #elif 1
 	const float width_offset = 1.0, width_scale = 2.0,
 	            height_offset = 1.0, height_scale = 2.0;
-	Model model("Models/african_head.obj");
+	Model model("Models/Head/african_head.obj");
+	TGAImage head = TGAImage("Models/Head/african_head_diffuse.tga");
+	texture = &head;
 #endif
 
 	const unsigned width = 1000, height = 1000;
 	TGAImage image(width, height, TGAImage::RGB);
 	ZBuffer zbuf(width, height);
-	ZBuffer_AlwaysAllow zb_always;
 
+// #define UT_TESTS_ONLY
+// #define UNIT_TEST_VERBOSE
+// #include "unittests/unittest_vector.h"
+// #include "unittests/unittest_colour.h"
 // #define UT_WIREFRAME
 // #include "unittests/unittest_colouredtriangles.h"
+// #include "unittests/unittest_lines.h"
 
+
+#ifndef UT_TESTS_ONLY
 	// 3D Drawing
-	Vector3f light(0, 0, -1);
+	const Vector3f view(0, 0, -1);
+	Vector3f light(-1, -1, -3); light.normalize();
 
 	// shaded render
 	for (int i = 0; i < model.nfaces(); ++i)
@@ -66,41 +81,41 @@ int main(int argc, char** argv)
 		Vertex screen_coords[3];
 
 		std::vector<int> const &face = model.face(i);
+		std::vector<int> const &face_uv = model.face_uv(i);
 		for (int j = 0; j < 3; ++j)
 		{
 			assert(face.size() >= 3);
+			assert(face_uv.size() >= 3);
+
 			Vector3f const &vert = model.vert(face[j]);
 			screen_coords[j].point = Vector3f(int((vert.x + width_offset) * width / width_scale),
 			                                  int((vert.y + height_offset) * height / height_scale),
 			                                      (vert.z + 1.0) / 2.0);
-			screen_coords[j].colour = Colour(rand()%255, rand()%255, rand()%255, 255);
+			screen_coords[j].uv = model.vert_uv(face_uv[j]);
 			world_coords[j] = vert;
 		}
 
-		float intensity = 0.0;
-		#if 0 // use given normals?
-		{
-			std::vector<int> const &face_norm = model.face_norm(i);
-			Vector3f norm = model.vert_norm(face_norm[0]) + model.vert_norm(face_norm[1]) + model.vert_norm(face_norm[2]);
-			intensity = -light.dot(norm.normalize());
-		}
-		#else // calculate normals
-		{
-			Vector3f norm = (world_coords[2]-world_coords[0]).cross(world_coords[1]-world_coords[0]);
-			intensity = light.dot(norm.normalize());
-		}
-		#endif
+		Vector3f tri_normal = (world_coords[2]-world_coords[0]).cross(world_coords[1]-world_coords[0]).normalize();
 
 		// back face occlusion - test for dot product being positive
-		if (intensity > 0)
+		if (view.dot(tri_normal) > 0)
 		{
-			triangle(screen_coords[0], screen_coords[1], screen_coords[2], zbuf, image);
-			// line(screen_coords[0].point, screen_coords[1].point, zb_always, image, Colours::white);
-			// line(screen_coords[1].point, screen_coords[2].point, zb_always, image, Colours::white);
-			// line(screen_coords[2].point, screen_coords[0].point, zb_always, image, Colours::white);
+			const bool SMOOTH_SHADED = true;
+			if (SMOOTH_SHADED)
+			{
+				// calculate the light intensity at each normal
+				std::vector<int> const &face_norm = model.face_norm(i);
+				screen_coords[0].colour = ColourD(-light.dot(model.vert_norm(face_norm[0]))).clamp();
+				screen_coords[1].colour = ColourD(-light.dot(model.vert_norm(face_norm[1]))).clamp();
+				screen_coords[2].colour = ColourD(-light.dot(model.vert_norm(face_norm[2]))).clamp();
+			}
+			else
+				// just use the face's light intensity
+				screen_coords[0].colour = screen_coords[1].colour = screen_coords[2].colour = ColourD(light.dot(tri_normal)).clamp();
+
+			triangle(screen_coords[0], screen_coords[1], screen_coords[2], zbuf, image, texture);
 		}
 	}
-
 
 	// // 2D Drawing
 	// for (int i = 0; i < model.nfaces(); ++i)
@@ -130,6 +145,7 @@ int main(int argc, char** argv)
 	// 		line(x0, y0, x1, y1, image, Colours::white);
 	// 	}
 	// }
+#endif
 
 	image.flip_vertically();
 	image.write_tga_file("output.tga");
