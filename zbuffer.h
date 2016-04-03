@@ -37,7 +37,7 @@ public:
 
 		for (unsigned y = 0; y < height; ++y)
 			for (unsigned x = 0; x < width; ++x)
-				image.set(x, y, Colour(unsigned(get_pixel(x, y) * 255.0)));
+				image.set(x, y, get_pixel(x, y) / 255.0); //TODO: set this properly
 
 		image.flip_vertically();
 		image.write_tga_file(filename);

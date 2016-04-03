@@ -6,7 +6,10 @@
 #include "tgaimage.h"
 #include "model.h"
 #include "vector.h"
+#include "matrix.h"
 #include "draw.h"
+
+#include <sstream>
 
 // https://github.com/ssloy/tinyrenderer/wiki/
 
@@ -29,79 +32,117 @@ float randfp()
 	return float(rand()) / RAND_MAX;
 }
 
+const int depth = 255;
+
+Matrix4f get_viewport_matrix(int x, int y, int width, int height)
+{
+	double half_width = width / 2.0,
+	       half_height = height / 2.0,
+	       half_depth = depth / 2.0;
+
+	Matrix4f m = Matrix4f::TRANSLATION(x + half_width, y + half_height, half_depth);
+	m(0,0) = half_width;
+	m(1,1) = half_height;
+	m(2,2) = half_depth;
+	return m;
+}
+
 int main(int argc, char** argv)
 {
-	// PROFILE_SCOPED_FN
-
 	TGAImage *texture = NULL;
+	const int width = 1000, height = 1000;
+	int vp_scale_w = 1, vp_scale_h = 1;
+	int vp_x = 0, vp_y = 0;
 
 #if 0
-	const float width_offset = 1.0, width_scale = 2.0,
-	            height_offset = 0.2, height_scale = 2.3;
+	vp_scale_w = vp_scale_h = 8;
+	vp_x = width / 2 - (width / vp_scale_w / 2);
+	vp_y = height / 2 - (height / vp_scale_h / 2);
+	Model model("Models/Ambassador/Ambassador.obj");
+#elif 0
+	vp_y = -height * 0.5;
 	Model model("Models/BAC_Batman70s_rocksteady/batman.obj");
 #elif 0
-	// this doesn't work as quads aren't supported
-	const float width_offset = 1.0, width_scale = 2.0,
-	            height_offset = 0.2, height_scale = 2.3;
+	// this model doesn't work well as quads aren't supported
+	vp_scale_w = vp_scale_h = 80;
+	vp_x = width / 2 - (width / vp_scale_w / 2);
+	vp_y = height / 2 - (height / vp_scale_h / 2);
 	Model model("Models/Harley/Harley.obj");
 #elif 0
-	const float width_offset = 0.5, width_scale = 1.0,
-	            height_offset = 0.05, height_scale = 1.0;
+	vp_y = -height * 0.33;
 	Model model("Models/cat/cat.obj");
+	TGAImage cat = TGAImage("Models/cat/cat_diff.tga");
+	texture = &cat;
+#elif 0
+	// doesn't render and takes a long time
+	vp_scale_w = vp_scale_h = 80;
+	vp_x = width / 2 - (width / vp_scale_w / 2);
+	vp_y = height / 2 - (height / vp_scale_h / 2);
+	Model model("Models/LionKing/Simba/Simba.obj");
+	TGAImage body = TGAImage("Models/LionKing/Simba/Texture/5c817acd1.tga");
+	texture = &body;
 #elif 1
-	const float width_offset = 1.0, width_scale = 2.0,
-	            height_offset = 1.0, height_scale = 2.0;
 	Model model("Models/Head/african_head.obj");
 	TGAImage head = TGAImage("Models/Head/african_head_diffuse.tga");
 	texture = &head;
 #endif
 
-	const unsigned width = 1000, height = 1000;
 	TGAImage image(width, height, TGAImage::RGB);
 	ZBuffer zbuf(width, height);
+	// ZBuffer_AlwaysAllow zbuf;
 
 // #define UT_TESTS_ONLY
 // #define UNIT_TEST_VERBOSE
 // #include "unittests/unittest_vector.h"
 // #include "unittests/unittest_colour.h"
+// #include "unittests/unittest_matrix.h"
+
 // #define UT_WIREFRAME
 // #include "unittests/unittest_colouredtriangles.h"
 // #include "unittests/unittest_lines.h"
 
 
 #ifndef UT_TESTS_ONLY
+	PROFILE_SCOPED_FN
+
 	// 3D Drawing
-	const Vector3f view(0, 0, -1);
-	Vector3f light(-1, -1, -3); light.normalize();
+	Vector3f camera(0, 0, -2);
+	Vector3f light(-1, -1, -3); //light.normalize();
+
+	Matrix4f viewport = get_viewport_matrix(vp_x, vp_y, width / vp_scale_w, height / vp_scale_h);
+	Matrix4f projection = Matrix4f::IDENTITY();
+	projection(3, 2) = -1.0 / -camera.z;
+	Matrix4f viewport_projection = viewport * projection;;
 
 	// shaded render
 	for (int i = 0; i < model.nfaces(); ++i)
 	{
-		Vector3f world_coords[3];
 		Vertex screen_coords[3];
+		Vector3f world_coords[3];
 
 		std::vector<int> const &face = model.face(i);
-		std::vector<int> const &face_uv = model.face_uv(i);
+		std::vector<int> const *face_uv = texture && model.has_uv(i) ? &model.face_uv(i) : NULL;
 		for (int j = 0; j < 3; ++j)
 		{
 			assert(face.size() >= 3);
-			assert(face_uv.size() >= 3);
+			if (face_uv)
+				assert(face_uv->size() >= 3);
 
 			Vector3f const &vert = model.vert(face[j]);
-			screen_coords[j].point = Vector3f(int((vert.x + width_offset) * width / width_scale),
-			                                  int((vert.y + height_offset) * height / height_scale),
-			                                      (vert.z + 1.0) / 2.0);
-			screen_coords[j].uv = model.vert_uv(face_uv[j]);
+			screen_coords[j].point = Vector3i(viewport_projection * vert);
 			world_coords[j] = vert;
+
+			if (face_uv)
+				screen_coords[j].uv = model.vert_uv((*face_uv)[j]);
 		}
 
 		Vector3f tri_normal = (world_coords[2]-world_coords[0]).cross(world_coords[1]-world_coords[0]).normalize();
 
 		// back face occlusion - test for dot product being positive
-		if (view.dot(tri_normal) > 0)
+		if (camera.dot(tri_normal) > 0)
 		{
 			const bool SMOOTH_SHADED = true;
-			if (SMOOTH_SHADED)
+			if (SMOOTH_SHADED && model.has_norm(i))
 			{
 				// calculate the light intensity at each normal
 				std::vector<int> const &face_norm = model.face_norm(i);
@@ -149,6 +190,6 @@ int main(int argc, char** argv)
 
 	image.flip_vertically();
 	image.write_tga_file("output.tga");
-	// zbuf.output("zbuf.tga");
+	zbuf.output("zbuf.tga");
 	return 0;
 }

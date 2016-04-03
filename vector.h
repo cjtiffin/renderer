@@ -27,8 +27,9 @@ public:
 
 	// also provided are:
 	//  comparison operators <, >, <=, >= == !=
-	//  arithmetic operators +, -, *, /, +=, -=, *=, /= for vector and float
-	//  vector operators dot, squared_length, length, normalize, is_unit, squared_distance, distance
+	//  arithmetic operators +, -, +=, -= for vector (component wise)
+	//  arithmetic operators +, -, *, /, +=, -=, *=, /= for float
+	//  vector operators dot, squared_length, length, normalize, isunit, squared_distance, distance
 	//  stream operators << >>
 
 	static const size_t size = 2;
@@ -57,7 +58,8 @@ public:
 
 	// also provided are:
 	//  comparison operators <, >, <=, >= == !=
-	//  arithmetic operators +, -, *, /, +=, -=, *=, /= for vector and float
+	//  arithmetic operators +, -, +=, -= for vector (component wise)
+	//  arithmetic operators +, -, *, /, +=, -=, *=, /= for float
 	//  vector operators dot, squared_length, length, normalize, is_unit, squared_distance, distance
 	//  stream operators << >>
 
@@ -84,7 +86,8 @@ public:
 
 	// also provided are:
 	//  comparison operators <, >, <=, >= == !=
-	//  arithmetic operators +, -, *, /, +=, -=, *=, /= for vector and float
+	//  arithmetic operators +, -, +=, -= for vector (component wise)
+	//  arithmetic operators +, -, *, /, +=, -=, *=, /= for float
 	//  vector operators dot, squared_length, length, normalize, is_unit, squared_distance, distance
 	//  stream operators << >>
 

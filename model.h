@@ -14,6 +14,9 @@ public:
 	size_t nverts() { return verts.size(); }
 	size_t nfaces() { return faces.size(); }
 
+	bool has_uv(size_t face) { return face < faces_uv.size(); }
+	bool has_norm(size_t face) { return face < faces_norm.size(); }
+
 	Vector3f const &vert(size_t idx)      { assert(idx < verts.size()); return verts[idx]; }
 	Vector2f const &vert_uv(size_t idx)   { assert(idx < verts_uv.size()); return verts_uv[idx]; }
 	Vector3f const &vert_norm(size_t idx) { assert(idx < verts_norm.size()); return verts_norm[idx]; }
