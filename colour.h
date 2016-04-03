@@ -34,7 +34,7 @@ template <class T> struct ColourBase
 
 
 	static const size_t size = 4;
-
+	static const size_t width = size;
 	union
 	{
 		struct { T b, g, r, a; };

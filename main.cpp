@@ -13,8 +13,6 @@
 
 // https://github.com/ssloy/tinyrenderer/wiki/
 
-using namespace Colours;
-
 template <typename T>
 T lerp(T start, T end, double percent)
 {
@@ -46,6 +44,28 @@ Matrix4f get_viewport_matrix(int x, int y, int width, int height)
 	m(2,2) = half_depth;
 	return m;
 }
+
+Matrix4f get_projection_matrix(double fov, double aspect = 4.0/3.0, double near_clip = 0.1, double far_clip = 100.0)
+{
+	Matrix4f m = Matrix4f::IDENTITY();
+	// m(3, 2) = -1.0 / (camera_pos - camera_look_at).length();
+	return m;
+}
+
+Matrix4f look_at(const Vector3f & eye, const Vector3f & pos, Vector3f up)
+{
+	Vector3f forward = (eye - pos).normalize();
+	Vector3f side = up.cross(forward).normalize();
+	up = forward.cross(side).normalize();
+
+	Matrix4f mt = Matrix4f::TRANSLATION(eye.x, eye.y, eye.z);
+	Matrix4f m = Matrix4f::IDENTITY();
+	m.set_column(0, side);
+	m.set_column(1, up);
+	m.set_column(2, forward);
+	return m * mt;
+}
+
 
 int main(int argc, char** argv)
 {
@@ -105,14 +125,34 @@ int main(int argc, char** argv)
 #ifndef UT_TESTS_ONLY
 	PROFILE_SCOPED_FN
 
-	// 3D Drawing
-	Vector3f camera(0, 0, -2);
-	Vector3f light(-1, -1, -3); //light.normalize();
+	Vector3f camera_look_at(0, 0, 0);
+	Vector3f camera_pos(1, 1, -3);
+	Vector3f camera_up(0, 1, 0);
+	Vector3f light_dir(-1, -1, -1); //direction light points in
 
-	Matrix4f viewport = get_viewport_matrix(vp_x, vp_y, width / vp_scale_w, height / vp_scale_h);
-	Matrix4f projection = Matrix4f::IDENTITY();
-	projection(3, 2) = -1.0 / -camera.z;
-	Matrix4f viewport_projection = viewport * projection;;
+	// transformation matrices
+	Matrix4f mat_model = Matrix4f::IDENTITY();
+	Matrix4f mat_view = Matrix4f::IDENTITY();
+	Matrix4f mat_projection = Matrix4f::IDENTITY();
+	Matrix4f mat_viewport = Matrix4f::IDENTITY();
+
+	mat_view = look_at(camera_look_at, camera_pos, camera_up);
+	mat_projection(3, 2) = -1.0 / (camera_pos - camera_look_at).length();
+	mat_viewport = get_viewport_matrix(vp_x, vp_y, width / vp_scale_w, height / vp_scale_h);
+
+	Matrix4f mat_model_view = mat_model * mat_view;
+	Matrix4f mat_vpmv = mat_viewport * mat_projection * mat_model_view;
+	Matrix4f mat_model_view_inv = mat_model_view.inverse();
+
+	PRINTX(mat_model);
+	PRINTX(mat_view);
+	PRINTX(mat_projection);
+	PRINTX(mat_viewport);
+	PRINTX(mat_model_view);
+	PRINTX(mat_vpmv);
+	PRINTX(mat_model_view_inv);
+
+	PRINTX(mat_vpmv * Vector3f(0,0,0));
 
 	// shaded render
 	for (int i = 0; i < model.nfaces(); ++i)
@@ -124,38 +164,40 @@ int main(int argc, char** argv)
 		std::vector<int> const *face_uv = texture && model.has_uv(i) ? &model.face_uv(i) : NULL;
 		for (int j = 0; j < 3; ++j)
 		{
-			assert(face.size() >= 3);
+			// assert(face.size() >= 3);
 			if (face_uv)
 				assert(face_uv->size() >= 3);
 
 			Vector3f const &vert = model.vert(face[j]);
-			screen_coords[j].point = Vector3i(viewport_projection * vert);
+			screen_coords[j].point = Vector3i(mat_vpmv * vert);
 			world_coords[j] = vert;
 
 			if (face_uv)
 				screen_coords[j].uv = model.vert_uv((*face_uv)[j]);
 		}
 
-		Vector3f tri_normal = (world_coords[2]-world_coords[0]).cross(world_coords[1]-world_coords[0]).normalize();
+		Vector3f tri_normal = mat_model_view_inv * (world_coords[2]-world_coords[0]).cross(world_coords[1]-world_coords[0]);
 
 		// back face occlusion - test for dot product being positive
-		if (camera.dot(tri_normal) > 0)
+		if (camera_look_at.dot(tri_normal) <= 0)
 		{
 			const bool SMOOTH_SHADED = true;
 			if (SMOOTH_SHADED && model.has_norm(i))
 			{
 				// calculate the light intensity at each normal
 				std::vector<int> const &face_norm = model.face_norm(i);
-				screen_coords[0].colour = ColourD(-light.dot(model.vert_norm(face_norm[0]))).clamp();
-				screen_coords[1].colour = ColourD(-light.dot(model.vert_norm(face_norm[1]))).clamp();
-				screen_coords[2].colour = ColourD(-light.dot(model.vert_norm(face_norm[2]))).clamp();
+				screen_coords[0].colour = ColourD(-light_dir.dot(model.vert_norm(face_norm[0]))).clamp();
+				screen_coords[1].colour = ColourD(-light_dir.dot(model.vert_norm(face_norm[1]))).clamp();
+				screen_coords[2].colour = ColourD(-light_dir.dot(model.vert_norm(face_norm[2]))).clamp();
 			}
 			else
 				// just use the face's light intensity
-				screen_coords[0].colour = screen_coords[1].colour = screen_coords[2].colour = ColourD(light.dot(tri_normal)).clamp();
+				screen_coords[0].colour = screen_coords[1].colour = screen_coords[2].colour = ColourD(-light_dir.dot(tri_normal)).clamp();
 
 			triangle(screen_coords[0], screen_coords[1], screen_coords[2], zbuf, image, texture);
 		}
+		// else
+		// 	PRINTX(tri_normal);
 	}
 
 	// // 2D Drawing
@@ -190,6 +232,6 @@ int main(int argc, char** argv)
 
 	image.flip_vertically();
 	image.write_tga_file("output.tga");
-	zbuf.output("zbuf.tga");
+	// zbuf.output("zbuf.tga");
 	return 0;
 }

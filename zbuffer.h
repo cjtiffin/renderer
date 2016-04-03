@@ -15,7 +15,7 @@ public:
 		: width(w), height(h)
 	{
 		size_t size = width * height;
-		buffer.resize(size, 0);
+		buffer.resize(size, std::numeric_limits<zbuf_type>::lowest());
 	}
 
 	virtual bool test(size_t x, size_t y, zbuf_type z)
@@ -33,11 +33,30 @@ public:
 
 	void output(const char *filename)
 	{
+		PROFILE_SCOPED_FN
+
 		TGAImage image(width, height, TGAImage::GRAYSCALE);
 
+		zbuf_type min = std::numeric_limits<zbuf_type>::max(),
+		          max = std::numeric_limits<zbuf_type>::lowest();
+
+		// normalize between min and max
 		for (unsigned y = 0; y < height; ++y)
 			for (unsigned x = 0; x < width; ++x)
-				image.set(x, y, get_pixel(x, y) / 255.0); //TODO: set this properly
+			{
+				zbuf_type const &px = get_pixel(x, y);
+				if (px <= std::numeric_limits<zbuf_type>::lowest())
+					continue;
+				if (px < min)
+					min = px;
+				if (px > max)
+					max = px;
+			}
+
+		double mm = max - min;
+		for (unsigned y = 0; y < height; ++y)
+			for (unsigned x = 0; x < width; ++x)
+				image.set(x, y, (get_pixel(x, y) - min) / mm);
 
 		image.flip_vertically();
 		image.write_tga_file(filename);

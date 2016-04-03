@@ -120,3 +120,6 @@ Vector3f v3(4,3,2);
 UNIT_TEST_T(m * v3 == Vector3f(0.14285714285714, 0.42857142857143, 0.71428571428571));
 std::stringstream("1,2,3,4, 5,6,7,8, 9,10,11,12, 0,0,0,1") >> m;
 UNIT_TEST_T(m * v3 == Vector3f(20, 60, 100));
+
+UNIT_TEST_T(m * Matrix4f::IDENTITY() == m);
+UNIT_TEST_T(Matrix4f::IDENTITY() * m == m);

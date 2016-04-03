@@ -40,6 +40,12 @@ template <class T> struct comparable_raw_arr
 	}
 };
 
+template <class T> struct invertible
+{
+	T operator - () { return static_cast<T &>(*this) *= -1; }
+	T const & operator - () const { return static_cast<T const &>(*this) * -1; }
+};
+
 // requires the equivalent x= operators
 template <class T, class U> struct arithmetic_add { friend T operator + (const T& l, const U& r) { T v = l; v += r; return v; } };
 template <class T, class U> struct arithmetic_sub { friend T operator - (const T& l, const U& r) { T v = l; v -= r; return v; } };
@@ -91,7 +97,11 @@ template <class T> struct streams_raw_arr
 	friend std::ostream & operator << (std::ostream& os, T const &v)
 	{
 		for (unsigned i=0; i<v.size-1; ++i)
+		{
 			os << static_cast<double>(v[i]) << ',';
+			if (i % v.width == v.width - 1)
+				os << ' ';
+		}
 		os << static_cast<double>(v[v.size-1]);
 		return os;
 	}
@@ -118,6 +128,7 @@ private:
 // provide a helper for all associated vector ops
 template <class T, class U> struct all_vector_ops
 	: comparable_raw_arr<T>
+	, invertible<T>
 	, arithmetic_add_raw_arr<T>
 	, arithmetic_sub_raw_arr<T>
 	, arithmetic_all_raw_arr2<T, float>
@@ -129,6 +140,7 @@ template <class T, class U> struct all_vector_ops
 // provide a helper for all associated matrix ops
 template <class T, class U> struct all_matrix_ops
 	: comparable_raw_arr<T>
+	, invertible<T>
 	, arithmetic_add_raw_arr<T>
 	, arithmetic_sub_raw_arr<T>
 	, arithmetic_all_raw_arr2<T, U>
@@ -139,6 +151,7 @@ template <class T, class U> struct all_matrix_ops
 // provide a helper for all associated colour ops
 template <class T, class U> struct all_colour_ops
 	: comparable_raw_arr<T>
+	, invertible<T>
 	, arithmetic_all_raw_arr<T>
 	, arithmetic_all_raw_arr2<T, float>
 	, subscript_raw_arr<T, U>

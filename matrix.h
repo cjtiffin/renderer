@@ -83,6 +83,45 @@ public:
 	}
 
 	// inverse, determinant
+	MType inverse () const
+	{
+		assert(is_affine());
+
+		double m00 = mm[0][0], m01 = mm[0][1], m02 = mm[0][2];
+		double m10 = mm[1][0], m11 = mm[1][1], m12 = mm[1][2];
+		double m20 = mm[2][0], m21 = mm[2][1], m22 = mm[2][2];
+		double m03 = mm[0][3], m13 = mm[1][3], m23 = mm[2][3];
+
+		double t00 = m22 * m11 - m21 * m12;
+		double t10 = m20 * m12 - m22 * m10;
+		double t20 = m21 * m10 - m20 * m11;
+
+		double inv_det = 1 / (m00 * t00 + m01 * t10 + m02 * t20);
+
+		t00 *= inv_det; t10 *= inv_det; t20 *= inv_det;
+		m00 *= inv_det; m01 *= inv_det; m02 *= inv_det;
+
+		double r00 = t00;
+		double r01 = m02 * m21 - m01 * m22;
+		double r02 = m01 * m12 - m02 * m11;
+
+		double r10 = t10;
+		double r11 = m00 * m22 - m02 * m20;
+		double r12 = m02 * m10 - m00 * m12;
+
+		double r20 = t20;
+		double r21 = m01 * m20 - m00 * m21;
+		double r22 = m00 * m11 - m01 * m10;
+
+		double r03 = - (r00 * m03 + r01 * m13 + r02 * m23);
+		double r13 = - (r10 * m03 + r11 * m13 + r12 * m23);
+		double r23 = - (r20 * m03 + r21 * m13 + r22 * m23);
+
+		return MType(r00, r01, r02, r03,
+		             r10, r11, r12, r13,
+		             r20, r21, r22, r23,
+		             0,   0,   0,   1);
+	}
 
 	bool is_affine() const { return mm[3][0] == 0 && mm[3][1] == 0 && mm[3][2] == 0 && mm[3][3] == 1; }
 
@@ -142,9 +181,9 @@ public:
 	//  arithmetic operators +, -, *, /, +=, -=, *=, /= for T
 	//  stream operators << >>
 
-	static const size_t size = 16,
-	                    width = 4,
-	                    height = 4;
+	static const size_t size = 16;
+	static const size_t width = 4;
+	static const size_t height = 4;
 	union
 	{
 		T mm[height][width];

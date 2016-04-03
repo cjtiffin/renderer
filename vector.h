@@ -33,6 +33,7 @@ public:
 	//  stream operators << >>
 
 	static const size_t size = 2;
+	static const size_t width = size;
 	union
 	{
 		struct { T x, y; };
@@ -64,6 +65,7 @@ public:
 	//  stream operators << >>
 
 	static const size_t size = 3;
+	static const size_t width = size;
 	union
 	{
 		struct { T x, y, z; };
@@ -92,6 +94,7 @@ public:
 	//  stream operators << >>
 
 	static const size_t size = 4;
+	static const size_t width = size;
 	union
 	{
 		struct { T x, y, z, w; };
